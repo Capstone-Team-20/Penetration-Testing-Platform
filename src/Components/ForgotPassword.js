@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import "../Styles/LoginPage.css";
 import image from "../Assets/HomePage.png";
-import { useNavigate } from 'react-router-dom';
-import supabase from '../supabaseClient.js';
+import { useNavigate } from "react-router-dom";
+import supabase from "../supabaseClient.js";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -21,17 +21,31 @@ const ForgotPassword = () => {
       setEmailError("");
     }
   };
-  
+
   const handleHomeClick = () => {
     navigate("/"); // Redirect to Login page
   };
 
   const handleResetPassword = async () => {
     if (!email || emailError) return;
-    
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) throw error;
+      // Check if the email exists in the Users table
+      const { data, error } = await supabase
+        .from("Users")
+        .select("email")
+        .eq("email", email)
+        .single();
+
+      if (error || !data) {
+        setEmailError("This email is not registered.");
+        return;
+      }
+
+      // Send reset password email
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
+      if (resetError) throw resetError;
+
       setMessage("If this email is registered, you will receive password reset instructions.");
     } catch (error) {
       setEmailError("Something went wrong. Please try again later.");
@@ -42,7 +56,7 @@ const ForgotPassword = () => {
     <div className="login-grid">
       <div className="form-container">
         <h2>Enter your email to receive a password reset link</h2>
-        <br></br>
+        <br />
         <form>
           <input
             type="email"
@@ -62,10 +76,7 @@ const ForgotPassword = () => {
           >
             SEND RESET LINK
           </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleHomeClick}          >
+          <button type="button" className="btn-secondary" onClick={handleHomeClick}>
             BACK TO LOGIN
           </button>
         </form>

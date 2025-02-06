@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../Styles/LoginPage.css";
 import image from "../Assets/HomePage.png";
 import { useNavigate } from "react-router-dom";
-// import supabase from "../supabaseClient.js";
+import supabase from "../supabaseClient.js";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -11,15 +11,19 @@ const ResetPassword = () => {
   const [passwordError, setPasswordError] = useState("");
   const [passwordMatchError, setPasswordMatchError] = useState("");
   const [showPopup, setShowPopup] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-    if (e.target.value.length < 8) {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+
+    if (newPassword.length < 8) {
       setPasswordError("Password must be at least 8 characters long.");
     } else {
       setPasswordError("");
     }
-    if (e.target.value !== verifyPassword) {
+
+    if (newPassword !== verifyPassword) {
       setPasswordMatchError("Passwords do not match.");
     } else {
       setPasswordMatchError("");
@@ -27,8 +31,10 @@ const ResetPassword = () => {
   };
 
   const handleVerifyPasswordChange = (e) => {
-    setVerifyPassword(e.target.value);
-    if (password !== e.target.value) {
+    const newVerifyPassword = e.target.value;
+    setVerifyPassword(newVerifyPassword);
+
+    if (password !== newVerifyPassword) {
       setPasswordMatchError("Passwords do not match.");
     } else {
       setPasswordMatchError("");
@@ -45,15 +51,15 @@ const ResetPassword = () => {
       return;
     }
 
-    // try {
-    //   const { error } = await supabase.auth.updateUser({ password });
-    //   if (error) throw error;
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
 
-    //   setShowPopup(true);
-    // } catch (error) {
-    //   setPasswordError("Something went wrong. Please try again later.");
-    // }
-    setShowPopup(true);
+      if (error) throw error;
+
+      setShowPopup(true);
+    } catch (error) {
+      setServerError("Something went wrong. Please try again later.");
+    }
   };
 
   const handlePopupClose = () => {
@@ -90,6 +96,8 @@ const ResetPassword = () => {
           {passwordMatchError && (
             <p className="error-message">{passwordMatchError}</p>
           )}
+
+          {serverError && <p className="error-message">{serverError}</p>}
 
           <button
             type="button"
